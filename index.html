@@ -427,22 +427,26 @@
                     this.publicState = 'idle';
                 },
 
-                startPublicScan() {
+startPublicScan() {
                     this.publicState = 'scanning';
                     this.publicData = null;
-                    this.publicScanner = new Html5Qrcode("public-reader");
-                    this.publicScanner.start(
-                        { facingMode: "environment" },
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        (decodedText) => {
-                            this.stopPublicScan();
-                            this.fetchPublicExtinguisher(decodedText);
-                        },
-                        (errorMessage) => {}
-                    ).catch(err => {
-                        this.publicState = 'error';
-                        this.publicData = { message: 'ไม่สามารถเข้าถึงกล้องได้ กรุณาตรวจสอบสิทธิ์การใช้งาน' };
-                    });
+                    
+                    // หน่วงเวลา 200ms รอให้กรอบ div#public-reader แสดงผลบนหน้าจอก่อนเปิดกล้อง
+                    setTimeout(() => {
+                        this.publicScanner = new Html5Qrcode("public-reader");
+                        this.publicScanner.start(
+                            { facingMode: "environment" }, // บังคับใช้กล้องหลัง
+                            { fps: 10, qrbox: { width: 250, height: 250 } },
+                            (decodedText) => {
+                                this.stopPublicScan();
+                                this.fetchPublicExtinguisher(decodedText);
+                            },
+                            (errorMessage) => {} // ข้าม error ยิบย่อยระหว่างสแกน
+                        ).catch(err => {
+                            this.publicState = 'error';
+                            this.publicData = { message: 'เบราว์เซอร์ไม่อนุญาตให้ใช้กล้อง (โปรดตรวจสอบการตั้งค่าสิทธิ์)' };
+                        });
+                    }, 200);
                 },
 
                 stopPublicScan() {
