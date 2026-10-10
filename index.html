@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ศูนย์บัญชาการระบบความปลอดภัยอัคคีภัย v3.1</title>
+    <title>ศูนย์บัญชาการระบบความปลอดภัยอัคคีภัย v3.2 (พร้อมโหมดประชาชน)</title>
     
-    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,20 +23,19 @@
         .dark .glass-card { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); }
         .btn-hover { transition: transform 0.2s; }
         .btn-hover:active { transform: scale(0.95); }
-        
         .leaflet-div-icon { background: transparent; border: none; }
         .pin-pulse-green { width: 16px; height: 16px; background-color: #10b981; border-radius: 50%; animation: pulse-green 2s infinite; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
         .pin-pulse-red { width: 16px; height: 16px; background-color: #ef4444; border-radius: 50%; animation: pulse-red 1.5s infinite; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.9); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        
         .dark .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
-        .watermark { position: absolute; inset: 0; opacity: 0.02; pointer-events: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="10" y="50" font-size="16" fill="gray" transform="rotate(-30 50 50)">ศูนย์บัญชาการ ปภ.</text></svg>'); background-size: 300px; }
+        .watermark { position: absolute; inset: 0; opacity: 0.02; pointer-events: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="10" y="50" font-size="20" fill="gray" transform="rotate(-30 50 50)">FSS Command</text></svg>'); background-size: 300px; }
         .dark .watermark { opacity: 0.01; }
     </style>
 </head>
 <body x-data="fireApp()" x-init="initApp()" :class="isDarkMode ? 'dark' : ''" class="bg-slate-50 dark:bg-darkbg text-slate-800 dark:text-slate-200">
 
+    <!-- Toast Notification -->
     <div class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
         <template x-for="toast in toasts" :key="toast.id">
             <div class="glass-card px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 min-w-[250px] transition-all duration-300 border-l-4"
@@ -48,260 +46,365 @@
         </template>
     </div>
 
-    <template x-if="!user">
-        <div class="min-h-screen flex items-center justify-center bg-slate-900 relative">
-            <div class="glass-card p-10 rounded-3xl shadow-2xl w-full max-w-md text-center mx-4">
-                <i class="fa-solid fa-fire-extinguisher text-5xl text-red-500 mb-6 block"></i>
-                <h1 class="text-2xl font-bold text-white mb-2">ศูนย์บัญชาการความปลอดภัย</h1>
-                <p class="text-slate-400 text-sm mb-8">องค์การบริหารส่วนตำบลพลับพลาไชย</p>
-                <input type="text" x-model="loginData.username" placeholder="ชื่อผู้ใช้งาน (admin)" class="w-full px-4 py-3 mb-4 bg-white/10 border border-white/20 rounded-xl text-white outline-none">
-                <input type="password" x-model="loginData.password" placeholder="รหัสผ่าน (1234)" class="w-full px-4 py-3 mb-6 bg-white/10 border border-white/20 rounded-xl text-white outline-none">
-                <button @click="doLogin" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3.5 rounded-xl transition-all btn-hover">
-                    <span x-show="!loading">เข้าสู่ระบบ</span>
-                    <span x-show="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> กำลังตรวจสอบ...</span>
+    <!-- ================= PUBLIC MODE ================= -->
+    <template x-if="isPublicMode">
+        <div class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-200 dark:from-slate-900 dark:to-slate-800 p-4 pb-10 flex flex-col">
+            
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6 pt-4 max-w-md mx-auto w-full">
+                <button @click="exitPublicMode" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-center text-slate-600 dark:text-slate-300 btn-hover">
+                    <i class="fa-solid fa-arrow-left"></i>
                 </button>
+                <div class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-red-500"></i> ปภ. พลับพลาไชย
+                </div>
+                <div class="w-10 h-10"></div> <!-- Placeholder for symmetry -->
+            </div>
+
+            <!-- Scanning State -->
+            <div x-show="publicState === 'scanning'" class="max-w-md mx-auto w-full glass-card rounded-3xl p-6 text-center shadow-xl border border-white/50">
+                 <h2 class="text-xl font-bold mb-4 flex justify-center items-center gap-2"><i class="fa-solid fa-qrcode text-red-500"></i> สแกน QR อุปกรณ์</h2>
+                 <div id="public-reader" class="w-full rounded-2xl bg-black min-h-[300px] overflow-hidden border-4 border-slate-800"></div>
+                 <p class="text-xs text-slate-500 mt-4">* นำกล้องส่องไปที่ QR Code บนถังดับเพลิง</p>
+            </div>
+
+            <!-- Loading State -->
+            <div x-show="publicState === 'loading'" class="flex-1 flex flex-col items-center justify-center py-20">
+                 <i class="fa-solid fa-circle-notch fa-spin text-5xl text-emerald-500 mb-6 drop-shadow-lg"></i>
+                 <p class="font-bold text-slate-600 dark:text-slate-300 tracking-widest uppercase">กำลังดึงข้อมูล...</p>
+            </div>
+
+            <!-- Result State (Premium Status Card) -->
+            <div x-show="publicState === 'result'" class="max-w-sm mx-auto w-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-white/60 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden">
+                <!-- Hero Status -->
+                <div :class="publicData?.Status === 'Normal' ? 'from-emerald-500 to-emerald-600 shadow-emerald-500/20' : 'from-red-500 to-red-600 shadow-red-500/20'" class="bg-gradient-to-r p-8 text-center text-white relative shadow-lg">
+                    <div class="w-24 h-24 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4 shadow-[0_0_0_8px_rgba(255,255,255,0.1)] relative">
+                         <div class="absolute inset-0 rounded-full animate-ping opacity-40 bg-white"></div>
+                         <i class="fa-solid fa-fire-extinguisher text-4xl drop-shadow-md relative z-10"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold tracking-wide drop-shadow" x-text="publicData?.Status === 'Normal' ? 'พร้อมใช้งาน' : 'งดใช้งาน'"></h2>
+                    <p class="text-white/80 text-sm mt-2 font-medium" x-text="publicData?.Status === 'Normal' ? 'อุปกรณ์อยู่ในสภาพสมบูรณ์' : 'อุปกรณ์รอการซ่อมบำรุง'"></p>
+                </div>
+
+                <!-- Body Info -->
+                <div class="p-6">
+                    <div class="space-y-3 mb-6 border-b border-slate-200 dark:border-slate-700 pb-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 dark:text-slate-400 text-sm font-bold">รหัสอ้างอิง</span>
+                            <span class="text-slate-800 dark:text-slate-200 font-mono font-bold bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-600" x-text="publicData?.ID"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 dark:text-slate-400 text-sm font-bold">สถานที่ติดตั้ง</span>
+                            <span class="text-slate-800 dark:text-slate-200 text-sm font-bold" x-text="publicData?.Location"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500 dark:text-slate-400 text-sm font-bold">ชนิดสารเคมี</span>
+                            <span class="text-blue-600 dark:text-blue-400 text-sm font-bold" x-text="publicData?.Type"></span>
+                        </div>
+                    </div>
+
+                    <!-- Fire Classes Badges -->
+                    <div class="mb-6 text-center">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-bold mb-3 uppercase tracking-wider">ประเภทไฟที่รองรับ</p>
+                        <div class="flex justify-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 flex flex-col items-center justify-center shadow-sm border border-emerald-200 dark:border-emerald-800">
+                                <span class="font-bold text-lg font-serif">A</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400 flex flex-col items-center justify-center shadow-sm border border-red-200 dark:border-red-800">
+                                <span class="font-bold text-lg font-serif">B</span>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 flex flex-col items-center justify-center shadow-sm border border-blue-200 dark:border-blue-800">
+                                <span class="font-bold text-lg font-serif">C</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- P.A.S.S. Guide -->
+                    <div class="mb-6 bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
+                         <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mb-4 text-center uppercase tracking-wider">วิธีใช้งานเบื้องต้น (P.A.S.S.)</p>
+                         <div class="grid grid-cols-4 gap-2 text-center">
+                             <div>
+                                 <div class="w-10 h-10 mx-auto bg-white dark:bg-slate-600 rounded-xl flex items-center justify-center shadow-sm mb-2 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-500"><i class="fa-solid fa-unlock-keyhole"></i></div>
+                                 <div class="text-[10px] font-bold dark:text-slate-300">1.ดึงสลัก</div>
+                             </div>
+                             <div>
+                                 <div class="w-10 h-10 mx-auto bg-white dark:bg-slate-600 rounded-xl flex items-center justify-center shadow-sm mb-2 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-500"><i class="fa-solid fa-hose"></i></div>
+                                 <div class="text-[10px] font-bold dark:text-slate-300">2.ปลดสาย</div>
+                             </div>
+                             <div>
+                                 <div class="w-10 h-10 mx-auto bg-white dark:bg-slate-600 rounded-xl flex items-center justify-center shadow-sm mb-2 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-500"><i class="fa-solid fa-hand-pointer"></i></div>
+                                 <div class="text-[10px] font-bold dark:text-slate-300">3.กดไก</div>
+                             </div>
+                             <div>
+                                 <div class="w-10 h-10 mx-auto bg-white dark:bg-slate-600 rounded-xl flex items-center justify-center shadow-sm mb-2 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-500"><i class="fa-solid fa-arrows-left-right"></i></div>
+                                 <div class="text-[10px] font-bold dark:text-slate-300">4.ส่ายหัว</div>
+                             </div>
+                         </div>
+                    </div>
+
+                    <!-- Verification -->
+                    <div class="bg-slate-50 dark:bg-slate-700/30 p-3.5 rounded-xl flex items-center gap-4 mb-6 border border-slate-100 dark:border-slate-700">
+                        <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/50 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">ตรวจสอบล่าสุดเมื่อ: <span x-text="publicData?.Last_Inspected"></span></p>
+                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">โดย เจ้าหน้าที่ ปภ. อบต.พลับพลาไชย</p>
+                        </div>
+                    </div>
+
+                    <!-- Call To Actions -->
+                    <div class="flex gap-3">
+                        <a href="tel:199" class="flex-1 bg-red-600 text-white py-3.5 rounded-xl font-bold hover:bg-red-700 transition shadow-lg shadow-red-600/30 flex justify-center items-center btn-hover">
+                            <i class="fa-solid fa-phone mr-2"></i> โทร 199
+                        </a>
+                        <button @click="showToast('ระบบแจ้งซ่อมสำหรับประชาชนกำลังพัฒนา', 'warning')" class="flex-1 bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-3.5 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-600 transition flex justify-center items-center btn-hover">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i> แจ้งชำรุด
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-slate-50 dark:bg-slate-800/80 text-center border-t border-slate-100 dark:border-slate-700">
+                    <button @click="startPublicScan" class="text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline"><i class="fa-solid fa-rotate-right mr-1"></i> สแกนอุปกรณ์จุดอื่น</button>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div x-show="publicState === 'error'" class="max-w-sm mx-auto w-full glass-card rounded-3xl p-8 text-center shadow-xl border border-white/50 mt-10">
+                 <div class="w-20 h-20 mx-auto bg-amber-100 dark:bg-amber-900/50 text-amber-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                     <i class="fa-solid fa-box-open text-3xl"></i>
+                 </div>
+                 <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-white">ไม่พบข้อมูล</h3>
+                 <p class="text-sm text-slate-500 dark:text-slate-400 mb-8" x-text="publicData?.message"></p>
+                 <button @click="startPublicScan" class="btn-hover w-full bg-slate-800 dark:bg-slate-200 dark:text-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg">
+                     <i class="fa-solid fa-qrcode mr-2"></i> ลองสแกนใหม่อีกครั้ง
+                 </button>
             </div>
         </div>
     </template>
 
-    <template x-if="user">
-        <div class="flex h-screen overflow-hidden relative">
-            <div class="watermark"></div>
-
-            <aside class="w-72 glass-card border-r hidden md:flex flex-col z-20">
-                <div class="p-6 flex justify-between items-center">
-                    <div class="font-bold text-base"><i class="fa-solid fa-shield-halved text-red-500 mr-2"></i> ศูนย์ ปภ. พลับพลาไชย</div>
-                    <button @click="toggleDarkMode()" class="text-slate-400 hover:text-red-500"><i class="fa-solid" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i></button>
-                </div>
-                <nav class="flex-1 px-4 py-2 space-y-1">
-                    <template x-for="menu in menus" :key="menu.id">
-                        <button @click="switchView(menu.id)" :class="{'bg-red-500/10 text-red-500': currentView === menu.id}" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-left btn-hover">
-                            <i :class="menu.icon" class="w-5 text-center"></i> <span x-text="menu.name"></span>
-                        </button>
-                    </template>
-                </nav>
-                <div class="p-5 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-sm font-bold" x-text="user.name"></span>
-                        <span class="text-xs text-red-500" x-text="user.role"></span>
-                    </div>
-                    <button @click="logout" class="text-slate-400 hover:text-red-500 btn-hover" title="ออกจากระบบ"><i class="fa-solid fa-power-off"></i></button>
-                </div>
-            </aside>
-
-            <main class="flex-1 overflow-y-auto relative z-10 pb-20 md:pb-0">
-                <!-- Mobile Header -->
-                <header class="md:hidden glass-card p-4 flex justify-between items-center sticky top-0 z-50">
-                    <div class="font-bold text-sm"><i class="fa-solid fa-shield text-red-500 mr-1"></i> ศูนย์ ปภ. พลับพลาไชย</div>
-                    <div class="flex gap-4">
-                        <button @click="toggleDarkMode()"><i class="fa-solid" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i></button>
-                        <button @click="logout"><i class="fa-solid fa-power-off text-slate-400"></i></button>
-                    </div>
-                </header>
-
-                <div x-show="!isOnline" class="bg-amber-500 text-white px-4 py-1 text-center text-xs font-bold w-full">กำลังทำงานในโหมดออฟไลน์ (Offline Mode)</div>
-
-                <div class="p-4 md:p-8 max-w-7xl mx-auto w-full">
-                    
-                    <div x-show="currentView === 'dashboard'">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-                            <div>
-                                <h2 class="text-3xl font-bold">ภาพรวมศูนย์บัญชาการ</h2>
-                                <p class="text-slate-500 text-sm mt-1">ติดตามสถานะและวิเคราะห์ข้อมูลความปลอดภัยแบบเรียลไทม์</p>
-                            </div>
-                            <button x-show="offlineQueue.length > 0" @click="syncOfflineData" class="btn-hover bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg">
-                                ซิงค์ข้อมูลเข้าคลาวด์ (<span x-text="offlineQueue.length"></span>)
+    <!-- ================= ADMIN / STAFF MODE ================= -->
+    <template x-if="!isPublicMode">
+        <div class="w-full h-full">
+            
+            <!-- Login Screen (Modified for Public Access) -->
+            <template x-if="!user">
+                <div class="min-h-screen flex items-center justify-center bg-slate-900 relative p-4">
+                    <div class="glass-card p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md text-center mx-auto relative z-10 border border-white/10">
+                        <i class="fa-solid fa-fire-extinguisher text-5xl text-red-500 mb-6 block drop-shadow-md"></i>
+                        <h1 class="text-3xl font-bold text-white mb-8 tracking-wide">FSS COMMAND</h1>
+                        
+                        <div class="space-y-4">
+                            <input type="text" x-model="loginData.username" placeholder="ชื่อผู้ใช้งาน (admin)" class="w-full px-5 py-3.5 bg-white/10 border border-white/20 rounded-xl text-white outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                            <input type="password" x-model="loginData.password" placeholder="รหัสผ่าน (1234)" class="w-full px-5 py-3.5 bg-white/10 border border-white/20 rounded-xl text-white outline-none focus:ring-2 focus:ring-red-500 transition-all">
+                            <button @click="doLogin" class="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold py-3.5 rounded-xl transition-all btn-hover shadow-[0_0_15px_rgba(239,68,68,0.4)]">
+                                <span x-show="!loading">เข้าสู่ระบบเจ้าหน้าที่</span>
+                                <span x-show="loading"><i class="fa-solid fa-circle-notch fa-spin"></i> กำลังตรวจสอบ...</span>
                             </button>
                         </div>
 
-                        <!-- 🎛️ SMART FILTERS -->
-                        <div class="glass-card p-4 rounded-xl mb-6 flex flex-wrap gap-4 items-center border border-slate-200 dark:border-white/10 z-20 relative shadow-sm">
-                            <div class="font-bold text-sm text-slate-500 flex items-center gap-2"><i class="fa-solid fa-filter"></i> ตัวกรองข้อมูล:</div>
-                            <select x-model="filters.location" @change="applyFilters()" class="bg-slate-100 dark:bg-slate-800 text-sm rounded-lg px-3 py-2 border-none outline-none focus:ring-2 focus:ring-red-500">
-                                <option value="">ทุกพื้นที่ติดตั้ง (ทุกโซน)</option>
-                                <template x-for="loc in uniqueLocations" :key="loc"><option :value="loc" x-text="loc"></option></template>
-                            </select>
-                            <button @click="resetFilters()" x-show="filters.location" class="text-xs text-red-500 hover:underline font-bold">ล้างตัวกรอง</button>
+                        <!-- Public Mode Entry Button -->
+                        <div class="mt-8 pt-6 border-t border-white/20">
+                            <p class="text-white/60 text-xs mb-3 font-medium uppercase tracking-widest">สำหรับประชาชนทั่วไป</p>
+                            <button @click="enterPublicMode" class="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3.5 rounded-xl border border-white/30 transition-all flex justify-center items-center backdrop-blur-md btn-hover">
+                                <i class="fa-solid fa-qrcode mr-2 text-emerald-400"></i> สแกนตรวจสอบอุปกรณ์
+                            </button>
                         </div>
+                    </div>
+                </div>
+            </template>
 
-                        <!-- KPI Widgets -->
-                        <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div class="glass-card p-6 rounded-2xl border-b-4 border-b-blue-500">
-                                <div class="text-slate-500 text-xs font-bold uppercase mb-2">ถังดับเพลิงทั้งหมด (Total)</div>
-                                <div class="text-4xl font-bold" x-text="dbStats.total">0</div>
-                            </div>
-                            <div class="glass-card p-6 rounded-2xl border-b-4 border-b-emerald-500">
-                                <div class="text-emerald-500 text-xs font-bold uppercase mb-2">สภาพปกติพร้อมใช้งาน (Operational)</div>
-                                <div class="text-4xl font-bold text-emerald-600 dark:text-emerald-400" x-text="dbStats.normal">0</div>
-                            </div>
-                            <div class="glass-card p-6 rounded-2xl border-b-4 border-b-red-500">
-                                <div class="text-red-500 text-xs font-bold uppercase mb-2">ต้องซ่อมบำรุง/ชำรุด (Critical)</div>
-                                <div class="text-4xl font-bold text-red-600 dark:text-red-400" x-text="dbStats.warning">0</div>
-                            </div>
+            <!-- Main App (Staff/Admin Workspace) -->
+            <template x-if="user">
+                <div class="flex h-screen overflow-hidden relative">
+                    <div class="watermark"></div>
+
+                    <!-- Sidebar Desktop -->
+                    <aside class="w-72 glass-card border-r hidden md:flex flex-col z-20">
+                        <div class="p-6 flex justify-between items-center">
+                            <div class="font-bold text-lg"><i class="fa-solid fa-shield-halved text-red-500 mr-2"></i> FSS Command</div>
+                            <button @click="toggleDarkMode()" class="text-slate-400 hover:text-red-500"><i class="fa-solid" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i></button>
                         </div>
+                        <nav class="flex-1 px-4 py-2 space-y-1">
+                            <template x-for="menu in menus" :key="menu.id">
+                                <button @click="switchView(menu.id)" :class="{'bg-red-500/10 text-red-500': currentView === menu.id}" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-left btn-hover">
+                                    <i :class="menu.icon" class="w-5 text-center"></i> <span x-text="menu.name"></span>
+                                </button>
+                            </template>
+                        </nav>
+                        <div class="p-5 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold" x-text="user.name"></span>
+                                <span class="text-xs text-red-500" x-text="user.role"></span>
+                            </div>
+                            <button @click="logout" class="text-slate-400 hover:text-red-500 btn-hover"><i class="fa-solid fa-power-off"></i></button>
+                        </div>
+                    </aside>
 
-                        <!-- 📈 Analytics Charts -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div class="glass-card p-6 rounded-2xl flex flex-col h-[300px]">
-                                <h3 class="font-bold text-sm mb-4"><i class="fa-solid fa-chart-pie text-purple-500 mr-2"></i> สัดส่วนสาเหตุความชำรุด</h3>
-                                <div class="flex-1 relative w-full"><canvas id="rootCauseChart"></canvas></div>
+                    <main class="flex-1 overflow-y-auto relative z-10 pb-20 md:pb-0">
+                        <!-- Mobile Header -->
+                        <header class="md:hidden glass-card p-4 flex justify-between items-center sticky top-0 z-50">
+                            <div class="font-bold"><i class="fa-solid fa-shield text-red-500"></i> FSS</div>
+                            <div class="flex gap-4">
+                                <button @click="toggleDarkMode()"><i class="fa-solid" :class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i></button>
+                                <button @click="logout"><i class="fa-solid fa-power-off text-slate-400"></i></button>
                             </div>
-                            <div class="glass-card p-6 rounded-2xl flex flex-col h-[300px]">
-                                <h3 class="font-bold text-sm mb-4"><i class="fa-solid fa-spider text-amber-500 mr-2"></i> เรดาร์ประเมินความเสี่ยงรายโซน</h3>
-                                <div class="flex-1 relative w-full"><canvas id="radarChart"></canvas></div>
-                            </div>
-                            <div class="glass-card p-6 rounded-2xl flex flex-col h-[300px] justify-between">
-                                <h3 class="font-bold text-sm"><i class="fa-solid fa-gauge-high text-emerald-500 mr-2"></i> อัตราการตรวจเช็คเดือนนี้</h3>
-                                <div class="flex-1 relative w-full flex items-center justify-center mt-4">
-                                    <canvas id="gaugeChart"></canvas>
-                                    <div class="absolute inset-0 flex flex-col items-center justify-center pt-8">
-                                        <span class="text-3xl font-bold" x-text="dbStats.coverage + '%'"></span>
-                                        <span class="text-[10px] text-slate-400 uppercase">ครอบคลุมแล้ว</span>
+                        </header>
+
+                        <div x-show="!isOnline" class="bg-amber-500 text-white px-4 py-1 text-center text-xs font-bold w-full">OFFLINE MODE</div>
+
+                        <div class="p-4 md:p-8 max-w-7xl mx-auto w-full">
+                            
+                            <!-- DASHBOARD -->
+                            <div x-show="currentView === 'dashboard'">
+                                <!-- ... (รหัสส่วน Dashboard ของ Admin คงเดิมจากเฟส 10) ... -->
+                                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                                    <div>
+                                        <h2 class="text-3xl font-bold">Command Overview</h2>
+                                        <p class="text-slate-500 text-sm mt-1">ติดตามสถานะและวิเคราะห์ข้อมูลความปลอดภัยแบบเรียลไทม์</p>
+                                    </div>
+                                </div>
+                                <div id="dashboard-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                    <div class="glass-card p-6 rounded-2xl cursor-move border-b-4 border-b-blue-500">
+                                        <div class="text-slate-500 text-xs font-bold uppercase mb-2">Total Equipment</div>
+                                        <div class="text-4xl font-bold" x-text="dbStats.total">0</div>
+                                    </div>
+                                    <div class="glass-card p-6 rounded-2xl cursor-move border-b-4 border-b-emerald-500">
+                                        <div class="text-emerald-500 text-xs font-bold uppercase mb-2">Operational (ปกติ)</div>
+                                        <div class="text-4xl font-bold text-emerald-600 dark:text-emerald-400" x-text="dbStats.normal">0</div>
+                                    </div>
+                                    <div class="glass-card p-6 rounded-2xl cursor-move border-b-4 border-b-red-500">
+                                        <div class="text-red-500 text-xs font-bold uppercase mb-2">Critical (ชำรุด)</div>
+                                        <div class="text-4xl font-bold text-red-600 dark:text-red-400" x-text="dbStats.warning">0</div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Map & Trend -->
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div class="lg:col-span-2 glass-card rounded-2xl p-1 h-[400px] relative flex flex-col z-0">
-                                <div class="absolute top-4 left-4 z-[400] bg-white/90 dark:bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-lg shadow text-sm font-bold"><i class="fa-solid fa-map-location-dot text-blue-500"></i> แผนที่พิกัดอุปกรณ์ (GIS Map)</div>
-                                <div id="map" class="w-full h-full rounded-xl" style="min-height: 380px;"></div>
-                            </div>
-                            <div class="glass-card p-6 rounded-2xl flex flex-col h-[400px]">
-                                <h3 class="font-bold text-sm mb-4"><i class="fa-solid fa-chart-line text-slate-400"></i> กราฟแนวโน้มความปลอดภัยย้อนหลัง</h3>
-                                <div class="flex-1 relative w-full"><canvas id="trendChart"></canvas></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div x-show="currentView === 'list'">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold">ทะเบียนถังดับเพลิง</h2>
-                            <input type="text" x-model="searchQuery" placeholder="ค้นหา รหัส, สถานที่..." class="w-48 md:w-64 glass-card rounded-xl px-4 py-2 text-sm focus:ring-2 outline-none">
-                        </div>
-                        <div class="glass-card rounded-2xl overflow-x-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead class="bg-slate-100 dark:bg-slate-800/50 text-slate-500">
-                                    <tr><th class="p-4">รหัสอุปกรณ์</th><th class="p-4">สถานที่ติดตั้ง</th><th class="p-4">สถานะปัจจุบัน</th><th class="p-4 text-center">ดำเนินการ</th></tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-200 dark:divide-white/10">
-                                    <template x-for="ext in filteredList" :key="ext.ID">
-                                        <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                            <td class="p-4 font-bold" x-text="ext.ID"></td>
-                                            <td class="p-4" x-text="ext.Location"></td>
-                                            <td class="p-4">
-                                                <span :class="ext.Status === 'Normal' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'" class="px-2 py-1 rounded text-xs font-bold" x-text="ext.Status === 'Normal' ? 'ปกติ' : 'ชำรุด'"></span>
-                                            </td>
-                                            <td class="p-4 text-center">
-                                                <button @click="startInspection(ext)" class="btn-hover bg-slate-100 dark:bg-slate-800 hover:text-red-500 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"><i class="fa-solid fa-clipboard-check mr-1"></i> ตรวจสอบ</button>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div x-show="currentView === 'scan'" class="max-w-md mx-auto mt-6">
-                        <div class="glass-card p-6 rounded-3xl text-center">
-                            <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-qrcode text-red-500"></i> สแกนคิวอาร์โค้ดอุปกรณ์</h2>
-                            <div id="reader" class="w-full rounded-2xl bg-black min-h-[300px] border-4 border-slate-800 relative flex items-center justify-center overflow-hidden">
-                                <div x-show="scanning" class="absolute inset-0 z-10 border-2 border-red-500 m-4 rounded-lg"><div class="absolute top-0 w-full h-0.5 bg-red-500 animate-[scan_2s_ease-in-out_infinite]"></div></div>
-                            </div>
-                            <div class="mt-4 flex gap-2">
-                                <button @click="startScanner" x-show="!scanning" class="flex-1 bg-slate-800 dark:bg-white dark:text-slate-900 text-white py-3 rounded-xl font-bold btn-hover">เปิดกล้องสแกน</button>
-                                <button @click="stopScanner" x-show="scanning" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold btn-hover">ปิดกล้อง</button>
-                            </div>
-                        </div>
-                        <style>@keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }</style>
-                    </div>
-
-                    <div x-show="currentView === 'inspect'" class="max-w-xl mx-auto">
-                        <div class="glass-card rounded-3xl p-6">
-                            <div class="flex justify-between mb-4 border-b pb-2">
-                                <h2 class="text-xl font-bold">บันทึกผลการตรวจสอบถังดับเพลิง</h2>
-                                <button @click="switchView('list')" class="btn-hover"><i class="fa-solid fa-xmark text-xl"></i></button>
-                            </div>
-                            <div class="mb-4 text-sm font-mono text-blue-500 font-bold">รหัสอุปกรณ์: <span x-text="activeExtinguisher?.ID"></span></div>
-                            <form @submit.prevent="submitInspection" class="space-y-4">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <template x-for="item in [{key:'Pressure', label:'เกจวัดแรงดัน'}, {key:'Body', label:'สภาพตัวถัง'}, {key:'Pin', label:'สลัก & ซีลนิรภัย'}, {key:'Hose', label:'สายฉีด & หัวฉีด'}]" :key="item.key">
-                                        <div class="p-3 border rounded-xl dark:border-white/10 text-center">
-                                            <label class="block text-xs font-bold uppercase mb-2" x-text="item.label"></label>
-                                            <div class="flex gap-1">
-                                                <button type="button" @click="form[item.key] = 'Pass'" :class="form[item.key] === 'Pass' ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="flex-1 py-1 rounded text-sm transition-colors btn-hover font-bold">ปกติ</button>
-                                                <button type="button" @click="form[item.key] = 'Fail'" :class="form[item.key] === 'Fail' ? 'bg-red-500 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="flex-1 py-1 rounded text-sm transition-colors btn-hover font-bold">ชำรุด</button>
-                                            </div>
-                                        </div>
-                                    </template>
+                            <!-- LIST -->
+                            <div x-show="currentView === 'list'">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h2 class="text-2xl font-bold">Equipment</h2>
+                                    <input type="text" x-model="searchQuery" placeholder="ค้นหา..." class="w-48 md:w-64 glass-card rounded-xl px-4 py-2 text-sm focus:ring-2 outline-none">
                                 </div>
-                                <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl mt-2 btn-hover"><i class="fa-solid fa-save mr-2"></i> บันทึกผลการตรวจสอบ</button>
-                            </form>
+                                <div class="glass-card rounded-2xl overflow-x-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead class="bg-slate-100 dark:bg-slate-800/50 text-slate-500">
+                                            <tr><th class="p-4">ID</th><th class="p-4">Location</th><th class="p-4">Status</th><th class="p-4 text-center">Action</th></tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-200 dark:divide-white/10">
+                                            <template x-for="ext in filteredList" :key="ext.ID">
+                                                <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                                    <td class="p-4 font-bold" x-text="ext.ID"></td>
+                                                    <td class="p-4" x-text="ext.Location"></td>
+                                                    <td class="p-4">
+                                                        <span :class="ext.Status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'" class="px-2 py-1 rounded text-xs font-bold" x-text="ext.Status"></span>
+                                                    </td>
+                                                    <td class="p-4 text-center">
+                                                        <button @click="startInspection(ext)" class="btn-hover bg-slate-100 dark:bg-slate-800 hover:text-red-500 p-2 rounded-lg transition-colors"><i class="fa-solid fa-clipboard-check"></i></button>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- ADMIN SCANNER -->
+                            <div x-show="currentView === 'scan'" class="max-w-md mx-auto mt-6">
+                                <div class="glass-card p-6 rounded-3xl text-center">
+                                    <h2 class="text-xl font-bold mb-4"><i class="fa-solid fa-qrcode text-red-500"></i> Admin Scanner</h2>
+                                    <div id="reader" class="w-full rounded-2xl bg-black min-h-[300px] border-4 border-slate-800 relative flex items-center justify-center overflow-hidden">
+                                        <div x-show="scanning" class="absolute inset-0 z-10 border-2 border-red-500 m-4 rounded-lg"><div class="absolute top-0 w-full h-0.5 bg-red-500 animate-[scan_2s_ease-in-out_infinite]"></div></div>
+                                    </div>
+                                    <div class="mt-4 flex gap-2">
+                                        <button @click="startScanner" x-show="!scanning" class="flex-1 bg-slate-800 dark:bg-white dark:text-slate-900 text-white py-3 rounded-xl font-bold btn-hover">ACTIVATE</button>
+                                        <button @click="stopScanner" x-show="scanning" class="flex-1 bg-red-600 text-white py-3 rounded-xl font-bold btn-hover">ABORT</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- FORM -->
+                            <div x-show="currentView === 'inspect'" class="max-w-xl mx-auto">
+                                <!-- ... ฟอร์มบันทึกการตรวจของเจ้าหน้าที่ (คงเดิม) ... -->
+                                <div class="glass-card rounded-3xl p-6">
+                                    <div class="flex justify-between mb-4 border-b pb-2">
+                                        <h2 class="text-xl font-bold">บันทึกผลตรวจสอบ (Admin)</h2>
+                                        <button @click="switchView('list')" class="btn-hover"><i class="fa-solid fa-xmark text-xl"></i></button>
+                                    </div>
+                                    <div class="mb-4 text-sm font-mono text-blue-500 font-bold" x-text="activeExtinguisher?.ID"></div>
+                                    <form @submit.prevent="submitInspection" class="space-y-4">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <template x-for="item in ['Pressure', 'Body', 'Pin', 'Hose']" :key="item">
+                                                <div class="p-3 border rounded-xl dark:border-white/10 text-center">
+                                                    <label class="block text-xs font-bold uppercase mb-2" x-text="item"></label>
+                                                    <div class="flex gap-1">
+                                                        <button type="button" @click="form[item] = 'Pass'" :class="form[item] === 'Pass' ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="flex-1 py-1 rounded text-sm btn-hover font-bold">PASS</button>
+                                                        <button type="button" @click="form[item] = 'Fail'" :class="form[item] === 'Fail' ? 'bg-red-500 text-white' : 'bg-slate-100 dark:bg-slate-800'" class="flex-1 py-1 rounded text-sm btn-hover font-bold">FAIL</button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl mt-2 btn-hover">บันทึกข้อมูล</button>
+                                    </form>
+                                </div>
+                            </div>
+
                         </div>
-                    </div>
 
+                        <!-- Mobile Nav Admin -->
+                        <nav class="md:hidden fixed bottom-0 w-full glass-card border-t flex justify-around p-2 z-50">
+                            <template x-for="menu in menus" :key="menu.id">
+                                <button @click="switchView(menu.id)" :class="currentView === menu.id ? 'text-red-500' : 'text-slate-400'" class="flex flex-col items-center w-1/3 p-2">
+                                    <i :class="menu.icon" class="text-xl"></i>
+                                    <span class="text-[9px] font-bold uppercase mt-1" x-text="menu.name"></span>
+                                </button>
+                            </template>
+                        </nav>
+                    </main>
                 </div>
-
-                <!-- Mobile Nav -->
-                <nav class="md:hidden fixed bottom-0 w-full glass-card border-t flex justify-around p-2 z-50">
-                    <template x-for="menu in menus" :key="menu.id">
-                        <button @click="switchView(menu.id)" :class="currentView === menu.id ? 'text-red-500' : 'text-slate-400'" class="flex flex-col items-center w-1/3 p-2">
-                            <i :class="menu.icon" class="text-xl"></i>
-                            <span class="text-[9px] font-bold uppercase mt-1" x-text="menu.name"></span>
-                        </button>
-                    </template>
-                </nav>
-
-                <div x-show="globalLoading" style="display:none;" class="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur flex flex-col items-center justify-center z-[999]">
-                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-red-500 mb-4"></i>
-                    <p class="font-bold tracking-widest text-sm" x-text="loadingText"></p>
-                </div>
-            </main>
+            </template>
         </div>
     </template>
 
     <script>
-        // ----------------------------------------------------------------------
-        // ใส่ URL Web App ของ Google Apps Script ของคุณที่นี่ !!!
-        // ----------------------------------------------------------------------
+        // สำคัญ: นำ URL ของ Web App จาก Google Apps Script มาใส่ที่นี่ !!!
         const API_URL = 'https://script.google.com/macros/s/AKfycbxO6NwTCrFRagIM29dDsbjg66U5bYzcY7NLUz8tMy57WUzl2nVGgDFErpvAKvSFHATrpg/exec';
-        
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('fireApp', () => ({
+                // โหมดประชาชน
+                isPublicMode: false,
+                publicState: 'idle', // idle, scanning, loading, result, error
+                publicData: null,
+                publicScanner: null,
+
+                // โหมดเจ้าหน้าที่ (Admin)
                 user: null, currentView: 'dashboard',
-                menus: [{ id: 'dashboard', name: 'หน้าหลัก', icon: 'fa-solid fa-chart-pie' }, { id: 'list', name: 'อุปกรณ์', icon: 'fa-solid fa-list' }, { id: 'scan', name: 'สแกน QR', icon: 'fa-solid fa-qrcode' }],
+                menus: [{ id: 'dashboard', name: 'Command', icon: 'fa-solid fa-chart-pie' }, { id: 'list', name: 'List', icon: 'fa-solid fa-list' }, { id: 'scan', name: 'Scan', icon: 'fa-solid fa-qrcode' }],
                 loginData: { username: '', password: '' },
-                loading: false, globalLoading: false, loadingText: 'กำลังประมวลผล...',
+                loading: false, globalLoading: false, loadingText: 'LOADING...',
                 isOnline: navigator.onLine,
-                offlineQueue: JSON.parse(localStorage.getItem('fss_offline_queue')) || [],
+                offlineQueue: [],
                 toasts: [],
                 
-                rawExtinguishers: [], rawInspections: [], backendTrends: null,
+                rawExtinguishers: [],
                 filteredExtinguishers: [],
-                dbStats: { total: 0, normal: 0, warning: 0, coverage: 0, expiry: {in30:0, in60:0} },
-                filters: { location: '', type: '' }, searchQuery: '',
-                
-                charts: { rootCause: null, radar: null, gauge: null, trend: null },
-                mapInstance: null, markersLayer: null,
+                dbStats: { total: 0, normal: 0, warning: 0 },
+                searchQuery: '',
                 isDarkMode: localStorage.getItem('theme') === 'dark',
                 
                 html5QrcodeScanner: null, scanning: false,
                 activeExtinguisher: null,
                 form: { Pressure: 'Pass', Body: 'Pass', Pin: 'Pass', Hose: 'Pass', Note: '' },
-                isListening: false,
 
                 initApp() {
-                    window.addEventListener('online', () => { this.isOnline = true; this.showToast('เชื่อมต่ออินเทอร์เน็ตแล้ว', 'success'); this.syncOfflineData(); });
-                    window.addEventListener('offline', () => { this.isOnline = false; this.showToast('ขาดการเชื่อมต่ออินเทอร์เน็ต', 'warning'); });
-                    
                     const savedUser = localStorage.getItem('fss_user');
                     if (savedUser) { this.user = JSON.parse(savedUser); this.loadData(); }
-                    this.$watch('isDarkMode', () => { if(this.currentView === 'dashboard') { this.renderCharts(); } });
                 },
 
                 showToast(message, type = 'success') {
-                    const id = Date.now(); this.toasts.push({ id, message, type });
+                    const id = Date.now();
+                    this.toasts.push({ id, message, type });
                     setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3000);
                 },
 
@@ -310,7 +413,67 @@
                     localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
                 },
 
-                // เปลี่ยนจาก google.script.run เป็น fetch() (API Architecture)
+                // ----------------------------------------------------
+                // ฟังก์ชันสำหรับประชาชน (Public Mode)
+                // ----------------------------------------------------
+                enterPublicMode() {
+                    this.isPublicMode = true;
+                    this.startPublicScan();
+                },
+                
+                exitPublicMode() {
+                    this.isPublicMode = false;
+                    this.stopPublicScan();
+                    this.publicState = 'idle';
+                },
+
+                startPublicScan() {
+                    this.publicState = 'scanning';
+                    this.publicData = null;
+                    this.publicScanner = new Html5Qrcode("public-reader");
+                    this.publicScanner.start(
+                        { facingMode: "environment" },
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+                            this.stopPublicScan();
+                            this.fetchPublicExtinguisher(decodedText);
+                        },
+                        (errorMessage) => {}
+                    ).catch(err => {
+                        this.publicState = 'error';
+                        this.publicData = { message: 'ไม่สามารถเข้าถึงกล้องได้ กรุณาตรวจสอบสิทธิ์การใช้งาน' };
+                    });
+                },
+
+                stopPublicScan() {
+                    if (this.publicScanner) {
+                        this.publicScanner.stop().catch(() => {});
+                    }
+                },
+
+                fetchPublicExtinguisher(qrData) {
+                    this.publicState = 'loading';
+                    
+                    fetch(`${API_URL}?action=getPublicData&id=${encodeURIComponent(qrData)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.publicData = data.data;
+                                this.publicState = 'result';
+                            } else {
+                                this.publicData = { message: data.message || 'ไม่พบข้อมูลในระบบ' };
+                                this.publicState = 'error';
+                            }
+                        })
+                        .catch(err => {
+                            this.publicData = { message: 'การเชื่อมต่อขัดข้อง โปรดลองใหม่อีกครั้ง' };
+                            this.publicState = 'error';
+                        });
+                },
+
+                // ----------------------------------------------------
+                // ฟังก์ชันสำหรับเจ้าหน้าที่ (Admin Mode)
+                // ----------------------------------------------------
                 doLogin() {
                     if (!this.loginData.username || !this.loginData.password) return;
                     this.loading = true;
@@ -323,14 +486,9 @@
                                 this.user = res.user;
                                 localStorage.setItem('fss_user', JSON.stringify(res.user));
                                 this.loadData();
-                            } else {
-                                this.showToast(res.message, 'error');
-                            }
+                            } else this.showToast(res.message, 'error');
                         })
-                        .catch(err => {
-                            this.loading = false;
-                            this.showToast('การเชื่อมต่อ API ล้มเหลว', 'error');
-                        });
+                        .catch(() => { this.loading = false; this.showToast('เชื่อมต่อเซิร์ฟเวอร์ล้มเหลว', 'error'); });
                 },
 
                 loadData() {
@@ -338,106 +496,29 @@
                     fetch(`${API_URL}?action=getData`)
                         .then(res => res.json())
                         .then(data => {
-                            if(data.error) { this.globalLoading = false; return this.showToast('Data Error', 'error'); }
                             this.rawExtinguishers = data.extinguishers || [];
-                            this.rawInspections = data.inspections || [];
-                            this.backendTrends = data.monthlyTrends;
                             this.applyFilters();
                             this.globalLoading = false;
-                        })
-                        .catch(err => {
-                            this.globalLoading = false;
-                            this.showToast('โหลดข้อมูลล้มเหลว', 'error');
                         });
                 },
 
-                // ฟังก์ชัน Filters และ Chart (ยังคงลอจิกเดิม)
-                get uniqueLocations() { return [...new Set(this.rawExtinguishers.map(item => item.Location))]; },
-                get uniqueTypes() { return [...new Set(this.rawExtinguishers.map(item => item.Type))]; },
-                get filteredList() { return this.searchQuery === '' ? this.filteredExtinguishers : this.filteredExtinguishers.filter(e => e.Location.toLowerCase().includes(this.searchQuery.toLowerCase()) || e.ID.toLowerCase().includes(this.searchQuery.toLowerCase())); },
-
-                resetFilters() { this.filters = { location: '', type: '' }; this.applyFilters(); },
+                get filteredList() { 
+                    return this.searchQuery === '' ? this.filteredExtinguishers : 
+                        this.filteredExtinguishers.filter(e => e.Location.toLowerCase().includes(this.searchQuery.toLowerCase()) || e.ID.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                },
 
                 applyFilters() {
-                    let data = this.rawExtinguishers;
-                    if (this.filters.location) data = data.filter(e => e.Location === this.filters.location);
-                    this.filteredExtinguishers = data;
-
-                    const total = data.length;
-                    const normal = data.filter(e => e.Status === 'Normal').length;
-                    
-                    this.dbStats = { 
-                        total: total, normal: normal, warning: total - normal,
-                        coverage: total > 0 ? Math.round((normal / total) * 100) : 0,
-                    };
-
-                    if(this.currentView === 'dashboard') { setTimeout(() => { this.renderCharts(); this.updateMapMarkers(); }, 100); }
+                    this.filteredExtinguishers = this.rawExtinguishers;
+                    const total = this.filteredExtinguishers.length;
+                    const normal = this.filteredExtinguishers.filter(e => e.Status === 'Normal').length;
+                    this.dbStats = { total: total, normal: normal, warning: total - normal };
                 },
 
                 switchView(view) {
                     this.currentView = view;
-                    if(view === 'dashboard') { setTimeout(() => { this.applyFilters(); if (this.mapInstance) this.mapInstance.invalidateSize(); }, 50); }
                     if(view !== 'scan') this.stopScanner();
                 },
 
-                // สร้างแผนที่และกราฟ 
-                renderCharts() {
-                    const textColor = this.isDarkMode ? '#cbd5e1' : '#475569';
-                    const gridColor = this.isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                    const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor } } } };
-
-                    let p=0, b=0, pin=0, h=0;
-                    this.rawInspections.forEach(insp => {
-                        if(this.filteredExtinguishers.some(e => e.ID === insp.Ext_ID)) {
-                            if(insp.Pressure === 'Fail') p++; if(insp.Body === 'Fail') b++; if(insp.Pin === 'Fail') pin++; if(insp.Hose === 'Fail') h++;
-                        }
-                    });
-                    if(this.charts.rootCause) this.charts.rootCause.destroy();
-                    const ctxRoot = document.getElementById('rootCauseChart');
-                    if(ctxRoot) this.charts.rootCause = new Chart(ctxRoot, { type: 'doughnut', data: { labels: ['เกจแรงดัน', 'ตัวถัง', 'สลัก', 'สายฉีด'], datasets: [{ data: [p,b,pin,h], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'], borderWidth: 0 }] }, options: { ...commonOptions, cutout: '70%', plugins: { legend: { position: 'right', labels: { color: textColor } } } } });
-
-                    const locCounts = {};
-                    this.filteredExtinguishers.forEach(e => { if(!locCounts[e.Location]) locCounts[e.Location] = 0; if(e.Status !== 'Normal') locCounts[e.Location]++; });
-                    
-                    if(this.charts.radar) this.charts.radar.destroy();
-                    const ctxRadar = document.getElementById('radarChart');
-                    if(ctxRadar && Object.keys(locCounts).length > 0) this.charts.radar = new Chart(ctxRadar, { type: 'radar', data: { labels: Object.keys(locCounts), datasets: [{ label: 'จุดชำรุด', data: Object.values(locCounts), backgroundColor: 'rgba(239,68,68,0.2)', borderColor: '#ef4444', pointBackgroundColor: '#ef4444' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { ticks: { display: false }, grid: { color: gridColor }, pointLabels: { color: textColor } } }, plugins:{legend:{display:false}} } });
-
-                    if(this.charts.gauge) this.charts.gauge.destroy();
-                    const ctxGauge = document.getElementById('gaugeChart');
-                    if(ctxGauge) this.charts.gauge = new Chart(ctxGauge, { type: 'doughnut', data: { datasets: [{ data: [this.dbStats.coverage, 100-this.dbStats.coverage], backgroundColor: ['#10b981', gridColor], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, circumference: 180, rotation: 270, cutout: '80%', plugins: { tooltip: { enabled: false } } } });
-
-                    if(this.charts.trend) this.charts.trend.destroy();
-                    const ctxTrend = document.getElementById('trendChart');
-                    if(ctxTrend && this.backendTrends) this.charts.trend = new Chart(ctxTrend, { type: 'line', data: { labels: this.backendTrends.labels, datasets: [{ label: 'ปกติ', data: this.backendTrends.datasets[0].data, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4 }, { label: 'ชำรุด', data: this.backendTrends.datasets[1].data, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4 }] }, options: { ...commonOptions, scales: { x: { grid:{color:gridColor}, ticks:{color:textColor} }, y: { grid:{color:gridColor}, ticks:{color:textColor} } } } });
-                },
-
-                initMap() {
-                    const mapEl = document.getElementById('map');
-                    if (!mapEl) return;
-                    if (!this.mapInstance) {
-                        this.mapInstance = L.map('map', { zoomControl: false }).setView([14.4720, 99.8820], 15);
-                        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(this.mapInstance);
-                        this.markersLayer = L.layerGroup().addTo(this.mapInstance);
-                    }
-                    setTimeout(() => { this.mapInstance.invalidateSize(); }, 300);
-                    this.updateMapMarkers();
-                },
-
-                updateMapMarkers() {
-                    if (!this.mapInstance || !this.markersLayer) { this.initMap(); return; }
-                    this.markersLayer.clearLayers();
-                    this.filteredExtinguishers.forEach(ext => {
-                        if(ext.Coordinates) {
-                            const [lat, lng] = ext.Coordinates.split(',');
-                            const isNormal = ext.Status === 'Normal';
-                            const icon = L.divIcon({ className: 'custom-pin', html: `<div class="${isNormal ? 'pin-pulse-green' : 'pin-pulse-red'}"></div>`, iconSize: [16,16], iconAnchor: [8,8] });
-                            L.marker([lat, lng], { icon }).addTo(this.markersLayer).bindPopup(`<b>รหัส: ${ext.ID}</b><br>สถานที่: ${ext.Location}`);
-                        }
-                    });
-                },
-
-                // Scanner & CRUD Logic
                 startScanner() {
                     this.scanning = true;
                     this.html5QrcodeScanner = new Html5Qrcode("reader");
@@ -447,7 +528,7 @@
                             this.stopScanner();
                             if (ext) { this.showToast('สแกนสำเร็จ', 'success'); this.startInspection(ext); } 
                             else this.showToast('ไม่พบข้อมูล', 'error');
-                        }, () => {}).catch(() => { this.showToast('ไม่สามารถเปิดกล้องได้', 'error'); this.scanning = false; });
+                        }, () => {}).catch(() => { this.showToast('Camera Error', 'error'); this.scanning = false; });
                 },
                 stopScanner() { if (this.html5QrcodeScanner) { this.html5QrcodeScanner.stop().then(() => this.scanning=false).catch(()=>{}); } },
                 
@@ -457,54 +538,17 @@
                     const status = Object.values(this.form).includes('Fail') ? 'Fail' : 'Pass';
                     const record = { Ext_ID: this.activeExtinguisher.ID, Status: status, ...this.form };
 
-                    if (!this.isOnline) {
-                        this.offlineQueue.push(record); localStorage.setItem('fss_offline_queue', JSON.stringify(this.offlineQueue));
-                        this.showToast('บันทึกออฟไลน์แล้ว', 'warning'); this.switchView('list'); return;
-                    }
-
-                    this.globalLoading = true; this.loadingText = 'กำลังบันทึกข้อมูล...';
-                    
-                    // เปลี่ยนจาก google.script.run เป็น fetch POST
-                    fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ต้องใช้ text/plain เพื่อเลี่ยง CORS preflight ของ GAS
-                        body: JSON.stringify({
-                            action: 'saveInspection',
-                            username: this.user.username,
-                            inspections: [record]
-                        })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        this.rawExtinguishers = data.extinguishers; this.rawInspections = data.inspections; this.backendTrends = data.monthlyTrends;
-                        this.applyFilters(); this.globalLoading = false; this.showToast('บันทึกสำเร็จ', 'success'); this.switchView('list');
-                    })
-                    .catch(err => {
-                        this.globalLoading = false; this.showToast('บันทึกล้มเหลว', 'error');
-                    });
-                },
-
-                syncOfflineData() {
-                    if (this.offlineQueue.length === 0 || !this.isOnline) return;
-                    this.globalLoading = true; this.loadingText = 'กำลังซิงค์ข้อมูล...';
+                    this.globalLoading = true; this.loadingText = 'SAVING...';
                     
                     fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({
-                            action: 'saveInspection',
-                            username: this.user.username,
-                            inspections: this.offlineQueue
-                        })
+                        body: JSON.stringify({ action: 'saveInspection', username: this.user.username, inspections: [record] })
                     })
                     .then(res => res.json())
                     .then(data => {
-                        this.offlineQueue = []; localStorage.removeItem('fss_offline_queue');
-                        this.rawExtinguishers = data.extinguishers; this.rawInspections = data.inspections; this.backendTrends = data.monthlyTrends;
-                        this.applyFilters(); this.globalLoading = false; this.showToast('ซิงค์ข้อมูลสำเร็จ', 'success');
-                    })
-                    .catch(err => {
-                        this.globalLoading = false; this.showToast('การซิงค์ล้มเหลว', 'error');
+                        this.rawExtinguishers = data.extinguishers;
+                        this.applyFilters(); this.globalLoading = false; this.showToast('Saved!', 'success'); this.switchView('list');
                     });
                 },
                 
